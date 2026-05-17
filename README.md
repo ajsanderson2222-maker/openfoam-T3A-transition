@@ -82,14 +82,10 @@ front sharpens during iteration.
 
 ### Flow field contours
 
-The intermittency contour (top) shows γ ≈ 0 (laminar, dark) in the thin
-near-wall layer at the leading edge, transitioning to γ = 1 (fully turbulent,
-yellow) progressively downstream. The transition front is the boundary between
-the dark and yellow regions at the wall.
-
-The turbulent kinetic energy k contour (bottom) shows the rapid growth of k
-through the transition zone and its spread into the boundary layer further
-downstream — the turbulent boundary layer thickens as expected.
+Turbulent kinetic energy k grows rapidly through the transition zone and spreads
+into the boundary layer further downstream. The near-zero k upstream of x ≈ 0.5 m
+marks the laminar region; the bright onset and subsequent thickening of the k layer
+mark the transition location and the growing turbulent boundary layer.
 
 ![Contours](images/contours.png)
 
@@ -118,6 +114,62 @@ empirical correlations for Re_θt at moderate Tu.
 
 ---
 
+## Study 1 — Freestream turbulence intensity sweep
+
+The same geometry and mesh were run at Tu = 1%, 3%, 6%, and 9% using
+`kOmegaSSTLM`. For each case k and ω were set from:
+
+```
+k = 1.5 (Tu · U∞)²
+ω = k / (ν · μt/μ)        (μt/μ = 12, consistent with the base case)
+```
+
+The transition onset Re_θt inlet value was updated using the Langtry-Menter
+empirical correlation for zero pressure gradient:
+
+```
+Re_θt = 803.73 (Tu + 0.6067)^{-1.027}
+```
+
+![Tu sweep](images/study_Tu_sweep.png)
+
+Transition onset shifts upstream as Tu increases, consistent with bypass
+transition physics — higher freestream turbulence penetrates the boundary layer
+more aggressively and triggers turbulent spots earlier. At Tu = 1% the boundary
+layer remains laminar well past Re_x = 10⁶ before transitioning; at Tu = 9%
+transition begins almost immediately from the leading edge. All four cases
+collapse onto the same turbulent Cf correlation downstream, confirming that the
+fully-turbulent state is independent of how transition was triggered. The Tu = 3%
+case matches the ERCOFTAC experimental data best, as expected.
+
+---
+
+## Study 2 — Model comparison: kOmegaSSTLM vs kOmegaSST
+
+Plain k-ω SST was run at Tu = 3% alongside the transition model to quantify the
+cost of omitting transition modelling.
+
+![Model comparison](images/study_model_comp.png)
+
+Without the γ-Reθ equations, k-ω SST treats the entire boundary layer as fully
+turbulent from the leading edge. This produces a Cf curve that:
+
+- **Over-predicts skin friction by 2–3×** through the laminar zone
+  (Re_x < 2 × 10⁵), because turbulent mixing is active where the real flow is
+  laminar
+- **Misses the transition dip entirely** — there is no Cf minimum, no rise, no
+  identifiable transition zone
+- **Converges onto the correct turbulent Cf** downstream of Re_x ≈ 8 × 10⁵,
+  where both models agree and match the data
+
+The shaded region between the two curves is the integrated drag error introduced
+by assuming fully-turbulent flow from the leading edge. For aerodynamic surfaces
+where transition location controls a significant fraction of total skin friction
+drag — turbine blades, aircraft wings at cruise, low-Re UAV configurations — this
+error is not acceptable and a transition-aware model is required.
+
+---
+
 ## Running the case
 
 ```bash
@@ -134,6 +186,17 @@ Or use the provided `Allrun` script:
 
 ```bash
 ./Allrun
+```
+
+### Studies
+
+```bash
+cd studies
+# cases are pre-run; to re-run:
+for case in Tu1 Tu3 Tu6 Tu9 kOmegaSST_Tu3; do
+    cd $case && blockMesh && foamRun && cd ..
+done
+python3 plot_studies.py
 ```
 
 ---
