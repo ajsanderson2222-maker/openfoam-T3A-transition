@@ -90,7 +90,6 @@ axes[1].annotate("y₁ ≈ 0.03 mm\ny⁺ ≈ 0.4",
                   arrowprops=dict(arrowstyle="->", color="darkred"),
                   fontsize=8, color="darkred")
 
-fig.suptitle("T3A flat plate mesh — blockMesh, structured, near-wall graded", fontsize=11)
 fig.tight_layout()
 fig.savefig(IMAGES / "mesh.png", dpi=150)
 plt.close(fig)
