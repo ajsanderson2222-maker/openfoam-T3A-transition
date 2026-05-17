@@ -80,10 +80,10 @@ segs_zoom = cell_edges(mesh, pts, z_mid,
 lc2 = mc.LineCollection(segs_zoom, linewidths=0.5, colors="steelblue", alpha=0.8)
 axes[1].add_collection(lc2)
 axes[1].set_xlim(0.04, 0.20)
-axes[1].set_ylim(0, 0.006)
+axes[1].set_ylim(0, 0.003)
 axes[1].set_xlabel("x (m)", fontsize=10)
 axes[1].set_ylabel("y (m)", fontsize=10)
-axes[1].set_title("Near-wall zoom\n(y < 6 mm, x = 40–200 mm)", fontsize=10)
+axes[1].set_title("Near-wall zoom\n(y < 3 mm, x = 40–200 mm)", fontsize=10)
 axes[1].axhline(0, color="k", lw=1.5)
 axes[1].annotate("y₁ ≈ 0.03 mm\ny⁺ ≈ 0.4",
                   xy=(0.06, 0.00003), xytext=(0.095, 0.0022),
