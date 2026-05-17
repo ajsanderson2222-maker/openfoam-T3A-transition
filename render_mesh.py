@@ -1,15 +1,14 @@
 """
-Render mesh views for the T3A flat plate case.
+Render mesh views for the T3A flat plate case using gridlines.
   images/mesh.png — two stacked panels:
-    top:    leading-edge region showing BL growth (x=0.04–0.8 m, y=0–0.05 m)
-    bottom: tight near-wall zoom at same x range (x=0.04–0.8 m, y=0–0.004 m)
+    top:    full plate overview with every Nth gridline
+    bottom: near-wall zoom with every gridline shown
 """
 
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.collections as mc
 from pathlib import Path
 from vtk import vtkUnstructuredGridReader
 from vtk.util.numpy_support import vtk_to_numpy
@@ -19,70 +18,73 @@ IMAGES = Path("images")
 r = vtkUnstructuredGridReader()
 r.SetFileName(str(sorted(Path("VTK").glob("*.vtk"))[-1]))
 r.Update()
-mesh = r.GetOutput()
+pts = vtk_to_numpy(r.GetOutput().GetPoints().GetData())
 
-pts = vtk_to_numpy(mesh.GetPoints().GetData())
 z_unique = np.unique(pts[:, 2])
 z_mid = z_unique[np.argmin(np.abs(z_unique))]
+mask = np.abs(pts[:, 2] - z_mid) < 1e-6
+xm = pts[mask, 0]
+ym = pts[mask, 1]
 
-def cell_edges(mesh, pts, z_mid, x_range=None, y_range=None, max_cells=10000):
-    segs = []
-    for i in range(mesh.GetNumberOfCells()):
-        cell = mesh.GetCell(i)
-        ids  = [cell.GetPointId(j) for j in range(cell.GetNumberOfPoints())]
-        if abs(pts[ids[0], 2] - z_mid) > 1e-6:
-            continue
-        cx = pts[ids, 0].mean()
-        cy = pts[ids, 1].mean()
-        if x_range and not (x_range[0] <= cx <= x_range[1]):
-            continue
-        if y_range and not (y_range[0] <= cy <= y_range[1]):
-            continue
-        for a, b in [(0,1),(1,2),(2,3),(3,0)]:
-            segs.append([(pts[ids[a],0], pts[ids[a],1]),
-                         (pts[ids[b],0], pts[ids[b],1])])
-        if len(segs) > max_cells * 4:
-            break
-    return segs
+xu = np.unique(xm)
+yu = np.unique(ym)
 
-X0, X1 = 0.04, 0.8   # leading-edge region — where transition happens
+def draw_gridlines(ax, xu, yu, x_range, y_range, x_stride, y_stride,
+                   lw=0.4, color="steelblue", alpha=0.7, log_y=False, n_y=None):
+    xsel = xu[(xu >= x_range[0]) & (xu <= x_range[1])][::x_stride]
+    yall = yu[(yu >= y_range[0]) & (yu <= y_range[1])]
+    if log_y and n_y is not None and len(yall) > 0:
+        # pick n_y lines uniformly spaced in log-space for readable grading
+        y0 = max(yall[1] if yall[0] == 0 else yall[0], 1e-9)
+        log_targets = np.logspace(np.log10(y0), np.log10(yall[-1]), n_y)
+        idx = np.searchsorted(yall, log_targets)
+        idx = np.clip(idx, 0, len(yall) - 1)
+        ysel = np.unique(yall[idx])
+        if yall[0] == 0:
+            ysel = np.concatenate(([0], ysel))
+    else:
+        ysel = yall[::y_stride]
+    for xv in xsel:
+        ax.axvline(xv, color=color, lw=lw, alpha=alpha)
+    for yv in ysel:
+        ax.axhline(yv, color=color, lw=lw, alpha=alpha)
 
-fig, axes = plt.subplots(2, 1, figsize=(12, 6),
+fig, axes = plt.subplots(2, 1, figsize=(13, 6),
                           gridspec_kw={"height_ratios": [2, 1]})
 
-# ── Top: BL overview — shows boundary layer growing downstream ────────────────
-segs_top = cell_edges(mesh, pts, z_mid,
-                       x_range=(X0, X1), y_range=(0, 0.05), max_cells=8000)
-lc = mc.LineCollection(segs_top, linewidths=0.3, colors="steelblue", alpha=0.7)
-axes[0].add_collection(lc)
-axes[0].set_xlim(X0, X1)
-axes[0].set_ylim(0, 0.05)
+# ── Top: full domain overview — every 8th x-line, every 4th y-line ───────────
+draw_gridlines(axes[0], xu, yu,
+               x_range=(0.04, 3.04), y_range=(0, 0.15),
+               x_stride=8, y_stride=4, lw=0.35)
+axes[0].set_xlim(0.04, 3.04)
+axes[0].set_ylim(0, 0.15)
 axes[0].set_ylabel("y (m)", fontsize=10)
-axes[0].set_title("T3A flat plate mesh — leading-edge region  (flow left → right)", fontsize=10)
-axes[0].axhline(0, color="k", lw=1.5)
-axes[0].annotate("leading\nedge", xy=(0.042, 0.003), xytext=(0.12, 0.03),
+axes[0].set_title("T3A flat plate mesh — full plate  (flow left → right)", fontsize=10)
+axes[0].axhline(0, color="k", lw=2)
+axes[0].annotate("leading edge\n(dense x-cells)", xy=(0.045, 0.01), xytext=(0.3, 0.09),
                  arrowprops=dict(arrowstyle="->", color="k"), fontsize=8, ha="center")
 axes[0].annotate("cells expand\nstreamwise →",
-                 xy=(0.55, 0.025), xytext=(0.35, 0.042),
+                 xy=(1.5, 0.06), xytext=(0.8, 0.12),
                  arrowprops=dict(arrowstyle="->", color="navy"), fontsize=8, color="navy")
 axes[0].annotate("wall-normal\ngrading",
-                 xy=(0.15, 0.004), xytext=(0.22, 0.022),
+                 xy=(0.6, 0.008), xytext=(1.1, 0.06),
                  arrowprops=dict(arrowstyle="->", color="darkred"), fontsize=8, color="darkred")
 axes[0].tick_params(labelbottom=False)
 
-# ── Bottom: near-wall zoom — shows first cell rows ────────────────────────────
-segs_bot = cell_edges(mesh, pts, z_mid,
-                       x_range=(X0, X1), y_range=(0, 0.004), max_cells=8000)
-lc2 = mc.LineCollection(segs_bot, linewidths=0.4, colors="steelblue", alpha=0.8)
-axes[1].add_collection(lc2)
-axes[1].set_xlim(X0, X1)
-axes[1].set_ylim(0, 0.004)
+# ── Bottom: near-wall zoom — narrow x window, sample every ~20th line ────────
+# Region: x=0.04–0.25 m, y=0–1 mm  →  ~517 x-lines, ~545 y-lines in range
+# Sample at stride 15/20 → ~34 x / ~27 y lines, making grading visible
+draw_gridlines(axes[1], xu, yu,
+               x_range=(0.04, 0.25), y_range=(0, 0.001),
+               x_stride=20, y_stride=1, lw=0.6, log_y=True, n_y=25)
+axes[1].set_xlim(0.04, 0.25)
+axes[1].set_ylim(0, 0.001)
 axes[1].set_xlabel("x (m)", fontsize=10)
 axes[1].set_ylabel("y (m)", fontsize=10)
-axes[1].set_title("Near-wall zoom  (y < 4 mm)", fontsize=10)
-axes[1].axhline(0, color="k", lw=1.5)
+axes[1].set_title("Near-wall zoom  (leading edge, y < 1 mm) — wall-normal grading visible", fontsize=10)
+axes[1].axhline(0, color="k", lw=2)
 axes[1].annotate("y₁ ≈ 0.03 mm,  y⁺ ≈ 0.4",
-                  xy=(0.25, 0.00003), xytext=(0.35, 0.002),
+                  xy=(0.055, 0.00003), xytext=(0.1, 0.0006),
                   arrowprops=dict(arrowstyle="->", color="darkred"),
                   fontsize=8, color="darkred")
 
