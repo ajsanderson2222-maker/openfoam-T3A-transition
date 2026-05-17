@@ -1,0 +1,47 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+Build  : 13-441953dfbb42
+Exec   : foamToVTK -latestTime
+Date   : May 17 2026
+Time   : 11:54:25
+Host   : "B3D-adscfd01"
+PID    : 3366832
+I/O    : uncollated
+Case   : /home/ads-user/openfoam/openfoam-T3A-transition
+nProcs : 1
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 268
+
+Time: 268
+    volScalarFields            : nut ReThetat gammaInt p k omega
+    volVectorFields            : wallShearStress U
+
+    Internal  : "/home/ads-user/openfoam/openfoam-T3A-transition/VTK/openfoam-T3A-transition_268.vtk"
+    Original cells:26820 points:54496   Additional cells:0  additional points:0
+
+Combining patches:
+    patch 0 above
+    patch 1 top
+    patch 2 inlet
+    patch 3 outlet
+    patch 4 plate
+    discarding empty/nonConformal/processor patch 5 defaultFaces
+    Patch     : "/home/ads-user/openfoam/openfoam-T3A-transition/VTK/above/above_268.vtk"
+    Patch     : "/home/ads-user/openfoam/openfoam-T3A-transition/VTK/top/top_268.vtk"
+    Patch     : "/home/ads-user/openfoam/openfoam-T3A-transition/VTK/inlet/inlet_268.vtk"
+    Patch     : "/home/ads-user/openfoam/openfoam-T3A-transition/VTK/outlet/outlet_268.vtk"
+    Patch     : "/home/ads-user/openfoam/openfoam-T3A-transition/VTK/plate/plate_268.vtk"
+    surfScalarFields  : phi
+End
+
