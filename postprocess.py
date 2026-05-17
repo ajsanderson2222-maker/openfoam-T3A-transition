@@ -179,6 +179,9 @@ tau_w   = np.abs(wss[:, 1])   # streamwise component (negative sign convention)
 Cf_cfd  = tau_w / q_inf
 Rex_cfd = U_inf * x_cfd / nu
 
+# trim trailing outlet points where wall shear drops at the boundary
+x_cfd, Cf_cfd, Rex_cfd = x_cfd[:-2], Cf_cfd[:-2], Rex_cfd[:-2]
+
 # Experimental data: x [mm], Cf, Tu[%]
 expt = np.loadtxt("validation/exptData/T3A.dat", comments="#")
 x_expt_mm = expt[:, 0]
