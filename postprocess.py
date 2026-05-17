@@ -137,28 +137,18 @@ try:
         yi = np.linspace(0, 0.15, 200)
         Xi, Yi = np.meshgrid(xi, yi)
 
-        fig, axes = plt.subplots(2, 1, figsize=(12, 6))
-
-        if gamma is not None:
-            Gi = griddata((xm, ym), gamma, (Xi, Yi), method="linear")
-            cf0 = axes[0].contourf(Xi, Yi, Gi, levels=50, cmap="plasma", vmin=0, vmax=1)
-            fig.colorbar(cf0, ax=axes[0], label="γ (intermittency)")
-            axes[0].set_title("Intermittency γ  — transition front visible as γ: 0→1")
-            axes[0].set_ylabel("y (m)")
-            axes[0].set_xlim(0, 3.0)
-            axes[0].set_ylim(0, 0.15)
+        fig, ax = plt.subplots(figsize=(12, 3))
 
         if k_arr is not None:
             Ki = griddata((xm, ym), k_arr, (Xi, Yi), method="linear")
-            cf1 = axes[1].contourf(Xi, Yi, Ki, levels=50, cmap="inferno")
-            fig.colorbar(cf1, ax=axes[1], label="k (m²/s²)")
-            axes[1].set_title("Turbulent kinetic energy k")
-            axes[1].set_xlabel("x (m)")
-            axes[1].set_ylabel("y (m)")
-            axes[1].set_xlim(0, 3.0)
-            axes[1].set_ylim(0, 0.15)
+            cf1 = ax.contourf(Xi, Yi, Ki, levels=50, cmap="inferno")
+            fig.colorbar(cf1, ax=ax, label="k (m²/s²)")
+            ax.set_title("Turbulent kinetic energy k — T3A flat plate, kOmegaSSTLM")
+            ax.set_xlabel("x (m)")
+            ax.set_ylabel("y (m)")
+            ax.set_xlim(0, 3.0)
+            ax.set_ylim(0, 0.15)
 
-        fig.suptitle("T3A flat plate — kOmegaSSTLM transition model", fontsize=11)
         fig.tight_layout()
         fig.savefig(IMAGES / "contours.png", dpi=150)
         plt.close(fig)
