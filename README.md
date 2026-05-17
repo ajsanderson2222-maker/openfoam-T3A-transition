@@ -44,6 +44,16 @@ structured blockMesh. The plate runs from x = 0.04 m to x = 3.04 m.
 | Kinematic viscosity ν | 1.5 × 10⁻⁵ m²/s |
 | Re_L | ~1.1 × 10⁶ |
 | Freestream Tu | 3% |
+| First cell height y₁ | 0.03 mm |
+| y⁺ (turbulent zone) | ≈ 0.4 |
+
+The mesh uses strong wall-normal grading toward the plate surface. y⁺ ≈ 0.4 keeps
+the first cell well inside the viscous sublayer — essential for `kOmegaSSTLM`,
+which integrates to the wall and cannot use wall functions for the transition
+variables γ and Re_θt. Streamwise cells are compressed at the leading edge and
+expand toward the outlet.
+
+![Mesh](images/mesh.png)
 
 ---
 
